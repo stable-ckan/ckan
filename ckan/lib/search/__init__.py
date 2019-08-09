@@ -55,7 +55,7 @@ _QUERIES = {
     'package': PackageSearchQuery
 }
 
-SOLR_SCHEMA_FILE_OFFSET = '/admin/file/?file=schema.xml'
+SOLR_SCHEMA_FILE_OFFSET = '/admin/file/?file=managed-schema'
 
 
 def _normalize_type(_type):
