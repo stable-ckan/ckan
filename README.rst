@@ -32,7 +32,29 @@ Installation
 
 See the `CKAN Documentation <http://docs.ckan.org>`_ for installation instructions.
 
+    ```bash
+    mkdir -p /usr/lib/ckan/default
+    chown `whoami` /usr/lib/ckan/default
+    virtualenv --no-site-packages /usr/lib/ckan/default
+    . /usr/lib/ckan/default/bin/activate
+    pip install /home/cristovao/ckan
+    pip install -r /usr/lib/ckan/default/src/ckan/requirements.txt
+    pip install -r /home/cristovao/ckan/requirements.txt
 
+    paster --plugin=ckan db init -c /etc/ckan/default/production.ini 
+
+    paster --plugin=ckan datastore set-permissions -c /etc/ckan/default/production.ini | sudo -u postgres psql --set ON_ERROR_STOP=1
+
+    paster --plugin=ckan sysadmin add admin email=admin@localhost name=admin -c /etc/ckan/default/production.ini
+
+    chmod 777 /var/lib/ckan/storage
+    chmod 777 /var/lib/ckan/storage/uploads
+    mkdir -p /var/lib/ckan/resources
+    chmod 777 /var/lib/ckan/resources
+
+    deactivate
+    ```
+    
 Support
 -------
 For general discussion around CKAN, you can write to the `Google Group`_.
