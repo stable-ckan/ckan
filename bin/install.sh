@@ -77,6 +77,7 @@ SOLR_CORE=${SOLR_CORE:-ckan}
 APACHE_ETC_DIR=/etc/apache2
 APACHE_ETC_SITES_DIR=$APACHE_ETC_DIR/sites-available
 APACHE_ETC_CONF_DIR=$APACHE_ETC_DIR/conf-available
+APACHE_ETC_PORTS=$APACHE_ETC_DIR/ports.conf
 
 # Configuration nginx
 CKAN_SITE_AVALIABLE=/etc/nginx/sites-available/ckan
@@ -164,6 +165,14 @@ cp $CKAN_INSTALL_CKAN_SITE $CKAN_SITE_AVALIABLE
 
 curl "$SOLR_URL/solr/admin/cores?action=CREATE&name=$SOLR_CORE&instanceDir=$SOLR_CORE&config=solrconfig.xml&dataDir=data&name=ckan&schema=managed-schema&wt=json"
 
+sed -i 's/Listen 80/Listen 8080/g' $APACHE_ETC_PORTS
+
+# Install cron update
+echo '
+/usr/lib/ckan/default/bin/paster --plugin=ckan tracking update -c /etc/ckan/default/production.ini
+/usr/lib/ckan/default/bin/paster --plugin=ckan search-index rebuild -r -c /etc/ckan/default/production.ini
+' > /etc/cron.hourly/ckan-update-tracking
+
 su -s /bin/bash - $CKAN_USER_GROUP <<EOF
 
 virtualenv --no-site-packages ${CKAN_LIB_DEFAULT_DIR}
@@ -187,6 +196,54 @@ EOF
 
 rm -rf $CKAN_LIB_DIR/.cache
 
+####################################################################
+# Commands for use system
+####################################################################
+
+echo '#!/bin/bash
+
+su -s /bin/bash - ckan <<"EOF"
+    . default/bin/activate
+	cd default/src/ckan
+	paster --plugin=ckan db init -c /etc/ckan/default/production.ini
+EOF' > $CKAN_LIB_DEFAULT_DIR/bin/intdb.sh
+
+chmod +x $CKAN_LIB_DEFAULT_DIR/bin/intdb.sh
+
+echo '#!/bin/bash
+
+su -s /bin/bash - ckan <<"EOF"
+    . default/bin/activate
+	cd default/src/ckan
+	paster --plugin=ckan sysadmin add admin -c /etc/ckan/default/production.ini
+EOF' > $CKAN_LIB_DEFAULT_DIR/bin/sysadmin.sh
+
+chmod +x $CKAN_LIB_DEFAULT_DIR/bin/sysadmin.sh
+
+echo '#!/bin/bash
+
+su -s /bin/bash - ckan <<"EOF"
+    . default/bin/activate
+	cd default/src/ckan
+	paster --plugin=ckan datastore set-permissions postgres -c /etc/ckan/default/production.ini
+EOF' > $CKAN_LIB_DEFAULT_DIR/bin/set-permissions.sh
+
+chmod +x $CKAN_LIB_DEFAULT_DIR/bin/set-permissions.sh
+
+echo '#!/bin/bash
+
+su -s /bin/bash - ckan <<"EOF"
+    . default/bin/activate
+	cd default/src/ckan
+    paster --plugin=ckan db upgrade -c /etc/ckan/default/production.ini
+    paster --plugin=ckan search-index rebuild -c /etc/ckan/default/production.ini
+    paster --plugin=ckan views create -c /etc/ckan/default/production.ini
+EOF' > $CKAN_LIB_DEFAULT_DIR/bin/upgrade-database.sh
+
+chmod +x $CKAN_LIB_DEFAULT_DIR/bin/upgrade-database.sh
+
+chown -R $CKAN_USER_GROUP:$CKAN_USER_GROUP $CKAN_LIB_DIR
+
 a2ensite ckan_default
 a2dissite 000-default
 rm -vi /etc/nginx/sites-enabled/default
@@ -196,3 +253,10 @@ service nginx reload
 
 systemctl restart apache2
 systemctl restart nginx
+
+echo 'Configure o banco de dados em /etc/ckan/default/production.ini e execute o /usr/lib/ckan/default/bin/intdb.sh'
+echo 'Adicione o administrador com o comando /usr/lib/ckan/default/bin/sysadmin.sh'
+echo 'Registre as permissões na base de dados com o comando /usr/lib/ckan/default/bin/set-permissions.sh'
+echo 'Para migrar a base de dados para a nova versao use o comando /usr/lib/ckan/default/bin/upgrade-database.sh'
+echo 'Com tudo configurado podera executar o comando: service apache2 restart'
+echo 'Com tudo configurado podera executar o comando: service crond restart'

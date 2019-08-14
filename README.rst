@@ -32,38 +32,28 @@ Installation
 
 See the `CKAN Documentation <http://docs.ckan.org>`_ for installation instructions.
 
-    sudo apt-get install python-dev postgresql libpq-dev python-pip python-virtualenv git-core solr-jetty openjdk-8-jdk redis-server
+Para um processo mais simplificado de instalação do Ckan deve seguir os passos abaixo:
 
-    sudo apt-get install apache2 libapache2-mod-wsgi libapache2-mod-rpaf
+Instale o git na sua distribuição linux (foi testado com o Ubuntu na versão 19.04)
 
-    solr-8.2.0/bin/install_solr_service.sh solr-8.2.0.zip
-
-    ```bash
-    mkdir -p /usr/lib/ckan/default
-    chown `whoami` /usr/lib/ckan/default
-    virtualenv --no-site-packages /usr/lib/ckan/default
-    . /usr/lib/ckan/default/bin/activate
-    pip install setuptools==36.1
-    pip install /home/cristovao/ckan
-    pip install -r /home/cristovao/ckan/requirements.txt
-
-    paster make-config ckan /etc/ckan/default/production.ini
-
-    paster --plugin=ckan db init -c /etc/ckan/default/production.ini 
-
-    paster --plugin=ckan datastore set-permissions -c /etc/ckan/default/production.ini | sudo -u postgres psql --set ON_ERROR_STOP=1
-
-    paster --plugin=ckan sysadmin add admin email=admin@localhost name=admin -c /etc/ckan/default/production.ini
-
-    chmod 777 /var/lib/ckan/storage
-    chmod 777 /var/lib/ckan/storage/uploads
-    mkdir -p /var/lib/ckan/resources
-    chmod 777 /var/lib/ckan/resources
-
-    chmod -R 777 /usr/lib/ckan/default/lib/python2.7/site-packages/ckan/public/base/i18n/
-
-    deactivate
-    ```
+1 - Crie o usuario para o postgres que sera usado pelo Ckan: `sudo -u postgres createuser -S -D -R -P ckan_default` (https://docs.ckan.org/en/2.8/maintaining/installing/install-from-source.html#setup-a-postgresql-database)
+2 - Crie o banco de dados do postgres que sera usado: `sudo -u postgres createdb -O ckan_default ckan_default -E utf-8` (https://docs.ckan.org/en/2.8/maintaining/installing/install-from-source.html#setup-a-postgresql-database)
+3 - Deve baixar o https://www.apache.org/dyn/closer.lua/lucene/solr/8.2.0/solr-8.2.0.tgz
+4 - Executem o comando `git clone https://github.com/stable-ckan/ckan.git ckan`
+5 - Entrar na pasta ckan e git checkout release-ckan-2.8.2 
+6 - executar o comando sudo ckan/bin/solr_init/install_solr_service.sh <CAMINHO DO solr-8.2.0.tgz>
+7 - Entrar na pasta ckan e executar o comando sudo bin/install.sh
+8 - Executar o comando git clone https://github.com/stable-ckan/datapusher.git datapusher
+9 - Entrar na pasta datapusher e executar o comando git checkout release-0.0.12
+10 - Executar o comando sudo datapusher/bin/install.sh
+11 - Editem o arquivo /etc/ckan/default/production.ini para editar o campo sqlalchemy.url = postgresql://ckan_default:pass@localhost/ckan_default para o banco que esta usando
+12 - Altere o ckan.site_id = default de /etc/ckan/default/production.ini
+13 - Altere o ckan.site_url para o endereço que o ckan sera usado no /etc/ckan/default/production.ini
+14 - Edite o solr_url = http://127.0.0.1:8983/solr/ckan no /etc/ckan/default/production.ini
+15 - Sete as configurações para o datastore em /etc/ckan/default/production.ini:
+    ckan.datastore.write_url = postgresql://ckan_default:ckan@localhost/datastore_default
+    ckan.datastore.read_url = postgresql://datastore_default:ckan@localhost/datastore_default
+16 - Altere para ckan.plugins = stats text_view image_view recline_view datastore datapusher no /etc/ckan/default/production.ini
     
 Support
 -------
