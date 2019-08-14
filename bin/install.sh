@@ -165,7 +165,7 @@ cp $CKAN_INSTALL_CKAN_SITE $CKAN_SITE_AVALIABLE
 
 curl "$SOLR_URL/solr/admin/cores?action=CREATE&name=$SOLR_CORE&instanceDir=$SOLR_CORE&config=solrconfig.xml&dataDir=data&name=ckan&schema=managed-schema&wt=json"
 
-sed -i 's/Listen 80/Listen 8080/g' $APACHE_ETC_PORTS
+sed -i 's/Listen 80.*/Listen 8080/g' $APACHE_ETC_PORTS
 
 # Install cron update
 echo '
