@@ -32,14 +32,22 @@ Installation
 
 See the `CKAN Documentation <http://docs.ckan.org>`_ for installation instructions.
 
+    sudo apt-get install python-dev postgresql libpq-dev python-pip python-virtualenv git-core solr-jetty openjdk-8-jdk redis-server
+
+    sudo apt-get install apache2 libapache2-mod-wsgi libapache2-mod-rpaf
+
+    solr-8.2.0/bin/install_solr_service.sh solr-8.2.0.zip
+
     ```bash
     mkdir -p /usr/lib/ckan/default
     chown `whoami` /usr/lib/ckan/default
     virtualenv --no-site-packages /usr/lib/ckan/default
     . /usr/lib/ckan/default/bin/activate
+    pip install setuptools==36.1
     pip install /home/cristovao/ckan
-    pip install -r /usr/lib/ckan/default/src/ckan/requirements.txt
     pip install -r /home/cristovao/ckan/requirements.txt
+
+    paster make-config ckan /etc/ckan/default/production.ini
 
     paster --plugin=ckan db init -c /etc/ckan/default/production.ini 
 
@@ -51,6 +59,8 @@ See the `CKAN Documentation <http://docs.ckan.org>`_ for installation instructio
     chmod 777 /var/lib/ckan/storage/uploads
     mkdir -p /var/lib/ckan/resources
     chmod 777 /var/lib/ckan/resources
+
+    chmod -R 777 /usr/lib/ckan/default/lib/python2.7/site-packages/ckan/public/base/i18n/
 
     deactivate
     ```
