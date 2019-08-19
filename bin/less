@@ -1,39 +1,14 @@
-#!/usr/bin/env node
+#!/bin/bash
 
-var path = require('path'),
-    nodeWatch = require('nodewatch'),
-    exec = require('child_process').exec,
-    watch = path.join(__dirname, '..', 'ckan', 'public', 'base', 'less'),
-    debug = process.env.ENV !== 'production',
-    lastArg = process.argv.slice().pop();
+CKAN_INSTALL_DIR="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 
-function now() {
-  return new Date().toISOString().replace('T', ' ').substr(0, 19);
-}
+LESSC=/usr/local/bin/lessc
 
-function compile(event, filename) {
-  var start = Date.now(),
-      filename = 'main.css';
+if [ ! -f $LESSC ]; then
+  echo -e "\nERROR: lessc not installed, exec sudo npm install -g less\n" 1>&2
+  exit 1
+fi
 
-  exec('`npm bin`/lessc ' + __dirname + '/../ckan/public/base/less/main.less > ' + __dirname + '/../ckan/public/base/css/' + filename, function (err, stdout, stderr) {
-    var duration = Date.now() - start;
+$LESSC $CKAN_INSTALL_DIR/ckan/public/base/less/main.less > $CKAN_INSTALL_DIR/ckan/public/base/css/main.css
 
-    if (err) {
-      console.log('An error occurred running the less command:');
-      console.log(err.message);
-    }
-    else if (stderr || stdout) {
-      console.log(stdout, stderr);
-    } else {
-      console.log('[%s] recompiled ' + filename + ' in %sms', now(), duration);
-    }
-  });
-}
-
-if (lastArg === '-p' || lastArg === '--production') {
-  debug = false;
-}
-
-console.log('Watching %s', watch);
-nodeWatch.add(watch).onChange(compile);
-compile();
+echo "Success css file generated\n" 1>&2
